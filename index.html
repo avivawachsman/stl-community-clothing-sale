@@ -52,6 +52,13 @@
             </svg>
         );
 
+        const X = ({ size = 16, className = "" }) => (
+            <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        );
+
         const ClothingSale = () => {
           const [searchTerm, setSearchTerm] = useState('');
           const [filterCategory, setFilterCategory] = useState('All');
@@ -95,18 +102,19 @@
                 
                 if (values.length < 10 || !values[2]) continue;
                 
-                let imageUrl = '';
+                let images = [];
                 if (values[13]) {
                   // Handle multiple image URLs separated by commas
                   const imageLinks = values[13].split(',').map(link => link.trim());
-                  const firstLink = imageLinks[0];
                   
-                  // Extract ID from Google Drive link
-                  const match = firstLink.match(/id=([^&\s]+)/);
-                  if (match) {
-                    // Use thumbnail format which works better for embedding
-                    imageUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
-                  }
+                  imageLinks.forEach(link => {
+                    // Extract ID from Google Drive link
+                    const match = link.match(/id=([^&\s]+)/);
+                    if (match) {
+                      // Use thumbnail format which works better for embedding
+                      images.push(`https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`);
+                    }
+                  });
                 }
                 
                 parsedItems.push({
@@ -123,7 +131,7 @@
                   price: values[10] || '',
                   link: values[11] || '',
                   notes: values[12] || '',
-                  image: imageUrl
+                  images: images
                 });
               }
               
@@ -193,16 +201,6 @@
 
                 <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
                   <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-1 relative">
-                      <Search />
-                      <input
-                        type="text"
-                        placeholder="Search by brand, type, or color..."
-                        className="w-full pl-10 pr-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:border-blue-500"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
                     <select
                       className="px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:border-blue-500"
                       value={filterCategory}
@@ -212,19 +210,57 @@
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </select>
+                    <div className="flex-1 relative">
+                      <Search />
+                      <input
+                        type="text"
+                        placeholder="Search by brand, type, or color..."
+                        className="w-full pl-10 pr-10 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:border-blue-500"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm('')}
+                          className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                        >
+                          <X size={20} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {filteredItems.map(item => (
                     <div key={item.id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300">
-                      {item.image ? (
-                        <div className="h-80 bg-gray-100 overflow-hidden">
-                          <img
-                            src={item.image}
-                            alt={`${item.brand} ${item.type}`}
-                            className="w-full h-full object-cover"
-                          />
+                      {item.images && item.images.length > 0 ? (
+                        <div className="h-80 bg-gray-100 overflow-hidden relative">
+                          {item.images.length === 1 ? (
+                            <img
+                              src={item.images[0]}
+                              alt={`${item.brand} ${item.type}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex overflow-x-auto snap-x snap-mandatory h-full">
+                              {item.images.map((img, idx) => (
+                                <img
+                                  key={idx}
+                                  src={img}
+                                  alt={`${item.brand} ${item.type} - Image ${idx + 1}`}
+                                  className="w-full h-full object-cover flex-shrink-0 snap-center"
+                                />
+                              ))}
+                            </div>
+                          )}
+                          {item.images.length > 1 && (
+                            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
+                              {item.images.map((_, idx) => (
+                                <div key={idx} className="w-2 h-2 rounded-full bg-white opacity-70"></div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="h-80 bg-gradient-to-br from-blue-100 to-sky-100 flex items-center justify-center">
