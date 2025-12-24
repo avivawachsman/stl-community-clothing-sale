@@ -96,9 +96,15 @@
                 
                 let imageUrl = '';
                 if (values[13]) {
-                  const match = values[13].match(/id=([^,\s]+)/);
+                  // Handle multiple image URLs separated by commas
+                  const imageLinks = values[13].split(',').map(link => link.trim());
+                  const firstLink = imageLinks[0];
+                  
+                  // Extract ID from Google Drive link
+                  const match = firstLink.match(/id=([^&\s]+)/);
                   if (match) {
-                    imageUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                    // Use thumbnail format which works better for embedding
+                    imageUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
                   }
                 }
                 
