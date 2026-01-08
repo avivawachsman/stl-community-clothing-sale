@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STL Community Clothing Sale</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>👕</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 50 5 Q 20 30 20 50 Q 20 80 50 95 Q 80 80 80 50 Q 80 30 50 5 Z' fill='%232563eb'/><rect x='60' y='35' width='20' height='30' rx='2' fill='white'/><path d='M 67 35 L 67 28 L 73 28 L 73 35' stroke='white' stroke-width='2' fill='none'/><text x='70' y='53' font-size='12' text-anchor='middle' fill='%232563eb' font-weight='bold'>$</text></svg>">
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -62,6 +65,7 @@
         const ClothingSale = () => {
           const [searchTerm, setSearchTerm] = useState('');
           const [filterCategory, setFilterCategory] = useState('All');
+          const [sortOrder, setSortOrder] = useState('newest');
           const [items, setItems] = useState([]);
           const [loading, setLoading] = useState(true);
           const [error, setError] = useState(null);
@@ -150,13 +154,32 @@
 
           const categories = ['All', ...new Set(items.map(item => item.category).filter(Boolean))];
 
-          const filteredItems = items.filter(item => {
+          let filteredItems = items.filter(item => {
             const matchesSearch = item.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                  item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                  item.color.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesCategory = filterCategory === 'All' || item.category === filterCategory;
             return matchesSearch && matchesCategory;
           });
+
+          // Sort items based on sort order
+          if (sortOrder === 'oldest') {
+            filteredItems = filteredItems.sort((a, b) => a.id - b.id);
+          } else if (sortOrder === 'price-low') {
+            filteredItems = filteredItems.sort((a, b) => {
+              const priceA = parseFloat(a.price.replace(/[^0-9.]/g, '')) || 0;
+              const priceB = parseFloat(b.price.replace(/[^0-9.]/g, '')) || 0;
+              return priceA - priceB;
+            });
+          } else if (sortOrder === 'price-high') {
+            filteredItems = filteredItems.sort((a, b) => {
+              const priceA = parseFloat(a.price.replace(/[^0-9.]/g, '')) || 0;
+              const priceB = parseFloat(b.price.replace(/[^0-9.]/g, '')) || 0;
+              return priceB - priceA;
+            });
+          } else {
+            filteredItems = filteredItems.sort((a, b) => b.id - a.id);
+          }
 
           if (loading) {
             return (
@@ -189,10 +212,18 @@
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-cyan-50">
               <div className="max-w-7xl mx-auto px-4 py-8">
                 <div className="text-center mb-12">
-                  <h1 className="text-5xl font-bold text-blue-900 mb-4">STL Community Clothing Sale</h1>
+                  <div className="relative inline-block">
+                    <h1 className="text-6xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500 mb-2" style={{fontFamily: "'Archivo Black', sans-serif"}}>
+                      STL Community
+                    </h1>
+                    <h2 className="text-4xl md:text-5xl font-bold text-blue-900 mb-4" style={{fontFamily: "'Bebas Neue', sans-serif"}}>
+                      Clothing Sale
+                    </h2>
+                  </div>
+                  <p className="text-lg text-gray-600 mb-4 font-medium">Find amazing deals on gently used clothing for the whole family!</p>
                   <button
                     onClick={fetchData}
-                    className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-sky-500 text-white rounded-full hover:from-blue-700 hover:to-sky-600 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
                     <RefreshCw size={16} className="inline" />
                     Refresh Items
@@ -228,6 +259,16 @@
                         </button>
                       )}
                     </div>
+                    <select
+                      className="px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:border-blue-500"
+                      value={sortOrder}
+                      onChange={(e) => setSortOrder(e.target.value)}
+                    >
+                      <option value="newest">Newest to Oldest</option>
+                      <option value="oldest">Oldest to Newest</option>
+                      <option value="price-low">Price: Low to High</option>
+                      <option value="price-high">Price: High to Low</option>
+                    </select>
                   </div>
                 </div>
 
